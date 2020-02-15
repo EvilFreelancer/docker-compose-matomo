@@ -1,4 +1,4 @@
-# Docker comosition of Matomo
+# Docker composition of Matomo
 
 Basic repo with composition of docker containers required for Matomo (formerly Piwik)
 
