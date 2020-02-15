@@ -1,0 +1,55 @@
+version: '3.7'
+
+services:
+
+  nginx:
+    restart: unless-stopped
+    image: nginx:latest
+    ports:
+    - 80:80
+    - 443:443
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    volumes:
+    - ./configs/nginx:/etc/nginx/conf.d:ro
+    - ./configs/certbot/conf:/etc/letsencrypt:rw
+    - ./configs/certbot/www:/var/www/certbot:rw
+    - ./logs/nginx:/var/log/nginx
+
+  certbot:
+    restart: unless-stopped
+    image: certbot/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    volumes:
+    - /etc/localtime:/etc/localtime:ro
+    - ./configs/certbot/conf:/etc/letsencrypt:rw
+    - ./configs/certbot/www:/var/www/certbot:rw
+
+  matomo:
+    image: matomo:latest
+    restart: unless-stopped
+    volumes:
+    #- ./matomo:/var/www/html
+    - ./matomo:/var/www/html/config
+    - ./logs/matomo:/var/logs/apache2
+
+  mariadb:
+    restart: unless-stopped
+    image: mariadb:10
+    ports:
+      - 127.0.0.1:3306:3306
+    volumes:
+      - ./databases/mariadb:/var/lib/mysql
+      - ./logs/mysql:/var/log/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootroot
+      - MYSQL_ROOT_HOST=%
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: unless-stopped
+    ports:
+    - 127.0.0.1:8080:80
+    environment:
+    - PMA_HOST=mariadb
+    - PMA_USER=root
+    - PMA_PASSWORD=rootroot

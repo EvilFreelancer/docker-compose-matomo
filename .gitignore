@@ -1,0 +1,5 @@
+/.idea/
+/logs/
+/databases/
+/matomo/
+/docker-compose.yml
